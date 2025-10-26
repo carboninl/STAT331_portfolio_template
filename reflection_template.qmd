@@ -807,12 +807,39 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: pe-1-one-call
 
+# Lab 3, Q5
+# Using mutate() to perform multiple modifications with one call
+teacher_evals_clean <- teacher_evals |>
+  rename(sex = gender) |>
+  filter(no_participants >= 10) |>
+  mutate(teacher_id = as.character(teacher_id),
+         academic_degree = as.factor(academic_degree),
+         sex = as.factor(sex)) |>
+  select(course_id, 
+         teacher_id, 
+         question_no, 
+         no_participants, 
+         resp_share, 
+         SET_score_avg,
+         percent_failed_cur, 
+         academic_degree, 
+         seniority, 
+         sex)
 ```
 
 -   using `across()`
 
 ```{r}
 #| label: pe-1-across
+
+# Lab 3, Q7 - Revised
+teacher_evals_unique |> 
+  summarize(
+    across(seniority, c(min = min, 
+                        max = max, 
+                        mean = mean, 
+                        median = median))
+  )
 
 ```
 
@@ -853,6 +880,14 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: pe-3-across
 
+# Lab 3, Q7 - Revised
+teacher_evals_unique |> 
+  summarize(
+    across(seniority, c(min = min, 
+                        max = max, 
+                        mean = mean, 
+                        median = median))
+  )
 ```
 
 -   using a `map()` function with **one** input (e.g., `map()`, `map_chr()`, `map_dbl()`, etc.)
@@ -910,6 +945,11 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: dsm-2-1
 
+# Lab 1, 'Performing a T-Test'
+# Performing T-Test
+data(ToothGrowth)
+t.test(len ~ supp, data = ToothGrowth)
+
 ```
 
 -   Example 2
@@ -917,6 +957,10 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: dsm-2-2
 
+# Lab 2, Q17 - Revised
+# Performing ANOVA Test
+aov(weight ~ species, data = surveys) |>
+  summary()
 ```
 
 -   Example 3
@@ -924,6 +968,11 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: dsm-2-3
 
+# Challenge 3, Q3 - Revised
+# Performing Chi-Squared Test
+table(teacher_evals_compare$SET_level,
+      teacher_evals_compare$sen_level) |>
+  chisq.test()
 ```
 
 ## Revising My Thinking
