@@ -609,6 +609,8 @@ ca_childcare |>
 #| label: dvs-1-num
 
 # Challenge 4, 'Building a visualization'
+# numeric: center based care median price
+# numeric: family based care median price
 childcare_long |>
   filter(study_year %in% c(2008, 2018)) |>
   ggplot(mapping = aes(x = center_median_price,
@@ -630,33 +632,30 @@ childcare_long |>
 ```{r}
 #| label: dvs-2-num-cat
 
-# Challenge 3, Q2
-teacher_evals_compare |>
-ggplot(mapping = aes(x = sen_level, fill = SET_level)) +
-  geom_bar(position = "fill") +
-  scale_y_continuous(labels = scales::percent) +
-  scale_fill_manual(values = c("excellent" = "#b896d3", 
-                               "standard" = "#bb955b")) +
-  labs(
-    title = "Evaluation of Teachers' Use of Activities",
-    x = "Years of Experience",
-    y = NULL,
-    fill = "Evaluation Rating"
-  ) +
+# Lab 2, Q16
+# categorical: species
+# numeric: weight
+ggplot(data = surveys, 
+       mapping = aes(y = species, x = weight)) +
+  geom_boxplot(outliers = FALSE) +
+  geom_jitter(color = 'steelblue', alpha = .05) + 
   theme_bw() +
-  theme(
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    legend.position = "top",
-  )
+  labs(title = 'Weight Distribution of Various Species \nin Portal, AZ', 
+       x = 'Species Name',
+       y = 'Weight (g)') +
+  theme(plot.title = element_text(size = rel(2), face = "bold"),
+        panel.grid.major = element_line(linewidth = .1),
+        panel.grid = element_line(color = 'slategray4'))
 ```
 
 -   At least two categorical variables
 
 ```{r}
 #| label: dvs-2-cat
-#| 
+ 
 # Challenge 3, Q2
+# categorical: seniority level
+# categorical: SET level
 teacher_evals_compare |>
 ggplot(mapping = aes(x = sen_level, fill = SET_level)) +
   geom_bar(position = "fill") +
@@ -683,6 +682,7 @@ ggplot(mapping = aes(x = sen_level, fill = SET_level)) +
 #| label: dvs-2-date
 
 # Lab 4, Q7
+# center-based care price over time by region
 ca_childcare |> 
   mutate(census_region = fct_relevel(census_region, regions)) |> 
   filter(census_region %in% regions) |> 
@@ -1154,6 +1154,8 @@ ca_childcare |>
 
 # Lab 5, 'Crime Scene Report'
 # Using kable() styling options to add non-default colors
+# I had a conversation with ChatGPT to help me, as I was unfamiliar with styling colors for tables
+# https://chatgpt.com/share/68fed0a2-9804-8002-9dcb-f56b913521c3
 crime_scene_report |>
   mutate(date = as.character(date),
          date = ymd(date)) |>
@@ -1301,6 +1303,16 @@ teacher_evals_unique |>
 ```{r}
 #| label: pe-4-1
 
+# Challenge 3, Q1
+# if_else() and case_when() are modern functions included with dplyr. I was able to learn why these new functions are improvements over the base versions here:
+# https://chatgpt.com/share/68fedf06-a534-8002-8669-25d29be64a49
+teacher_evals_compare <- teacher_evals |>
+  filter(question_no == 903) |>
+  mutate(SET_level = if_else(SET_score_avg >= 4, "excellent", "standard"),
+         sen_level = case_when(seniority <= 4 ~ "junior",
+                               seniority <= 8 ~ "senior",
+                               seniority > 8 ~ "very senior")) |>
+  select(course_id, SET_level, sen_level)
 ```
 
 -   I can connect a data wrangling pipeline into a `ggplot()`
@@ -1308,6 +1320,41 @@ teacher_evals_unique |>
 ```{r}
 #| label: pe-4-2
 
+# Lab 4, Q7
+ca_childcare |> 
+  mutate(census_region = fct_relevel(census_region, regions)) |> 
+  filter(census_region %in% regions) |> 
+  select(study_year,
+         census_region,
+         mc_infant,
+         mc_toddler,
+         mc_preschool) |> 
+  pivot_longer(cols = c(mc_infant,
+                        mc_toddler,
+                        mc_preschool),
+               names_to = "age_cohort",
+               values_to = "median_price") |> 
+  mutate(age_cohort = fct_recode(age_cohort, 
+                                 "Infant" = "mc_infant", 
+                                 "Toddler" = "mc_toddler", 
+                                 "Preschool" = "mc_preschool")) |> 
+  ggplot(mapping = aes(x = study_year, 
+                       y = median_price,
+                       color = census_region)) +
+    geom_point() +
+    geom_smooth(se = FALSE) +
+    facet_wrap(~age_cohort) +
+    scale_color_manual(values = colorRampPalette(brewer.pal(7, "Accent"))(10)) +
+    scale_x_continuous(breaks = seq(2008, 2018, by = 2)) +
+    scale_y_continuous(breaks = seq(100, 500, by = 100),
+                       limits = c(100, 500)) +
+    labs(x = "Study Year",
+         y = " ",
+         title = "Weekly Median Price for Center-based Childcare ($)",
+         color = "California Region") +
+    theme_bw() +
+    theme(aspect.ratio = 1, 
+          axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
 ```
 
 ## Data Simulation & Statisical Models
