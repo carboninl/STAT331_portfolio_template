@@ -10,7 +10,7 @@ execute:
   echo: true
 ---
 
-[**My Grade:**]{.underline} I believe my grade equivalent to course work evidenced below to be an \_\_.
+[**My Grade:**]{.underline} I believe my grade equivalent to course work evidenced below to be an A-.
 
 [**Learning Objective Evidence:**]{.underline} In the code chunks below, provide code from Lab or Challenge assignments where you believe you have demonstrated proficiency with the specified learning target. Be sure to specify **where** the code came from (e.g., Lab 4 Question 2).
 
@@ -99,9 +99,20 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: wd-2-ex-3
 
-# Lab 3, Q8
-teacher_evals_clean |>
-  filter(if_any(everything(), ~is.na(.)))
+# Lab 4, Q7 - Revised
+ca_childcare |> 
+  mutate(census_region = fct_relevel(census_region, regions)) |> 
+  filter(census_region %in% regions) |> 
+  select(study_year,
+         census_region,
+         contains("mc_")) |> 
+  pivot_longer(cols = contains("mc_"),
+               names_to = "age_cohort",
+               values_to = "median_price") |> 
+  mutate(age_cohort = fct_recode(age_cohort, 
+                                 "Infant" = "mc_infant", 
+                                 "Toddler" = "mc_toddler", 
+                                 "Preschool" = "mc_preschool"))
 ```
 
 **WD-3: I can filter rows from a dataframe for a *variety* of data types (e.g., numeric, integer, character, factor, date).**
@@ -133,7 +144,7 @@ teacher_evals_clean <- teacher_evals |>
 -   Numeric Example 2
 
 ```{r}
-#| label: wd-3-numeric-ex-1
+#| label: wd-3-numeric-ex-2
 
 # Lab 3, Q9
 teacher_evals_clean |>
@@ -221,8 +232,11 @@ teacher_evals_clean |>
 ```{r}
 #| label: wd-4-numeric-ex-2
 
-# Lab 3, Q5
-
+# Lab 3, Q7 - Revised
+teacher_evals_clean |> 
+  distinct(teacher_id, course_id, .keep_all = TRUE) |>
+  count(sex) |> 
+  mutate(proportion = n / sum(n))
 
 ```
 
@@ -249,24 +263,7 @@ ca_childcare |>
   mutate(age_cohort = fct_recode(age_cohort, 
                                  "Infant" = "mc_infant", 
                                  "Toddler" = "mc_toddler", 
-                                 "Preschool" = "mc_preschool")) |> 
-  ggplot(mapping = aes(x = study_year, 
-                       y = median_price,
-                       color = census_region)) +
-    geom_point() +
-    geom_smooth(se = FALSE) +
-    facet_wrap(~age_cohort) +
-    scale_color_manual(values = colorRampPalette(brewer.pal(7, "Accent"))(10)) +
-    scale_x_continuous(breaks = seq(2008, 2018, by = 2)) +
-    scale_y_continuous(breaks = seq(100, 500, by = 100),
-                       limits = c(100, 500)) +
-    labs(x = "Study Year",
-         y = " ",
-         title = "Weekly Median Price for Center-based Childcare ($)",
-         color = "California Region") +
-    theme_bw() +
-    theme(aspect.ratio = 1, 
-          axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
+                                 "Preschool" = "mc_preschool"))
 ```
 
 -   Factor Example 2 (reordering levels)
@@ -292,24 +289,7 @@ ca_childcare |>
   mutate(age_cohort = fct_recode(age_cohort, 
                                  "Infant" = "mc_infant", 
                                  "Toddler" = "mc_toddler", 
-                                 "Preschool" = "mc_preschool")) |> 
-  ggplot(mapping = aes(x = study_year, 
-                       y = median_price,
-                       color = census_region)) +
-    geom_point() +
-    geom_smooth(se = FALSE) +
-    facet_wrap(~age_cohort) +
-    scale_color_manual(values = colorRampPalette(brewer.pal(7, "Accent"))(10)) +
-    scale_x_continuous(breaks = seq(2008, 2018, by = 2)) +
-    scale_y_continuous(breaks = seq(100, 500, by = 100),
-                       limits = c(100, 500)) +
-    labs(x = "Study Year",
-         y = " ",
-         title = "Weekly Median Price for Center-based Childcare ($)",
-         color = "California Region") +
-    theme_bw() +
-    theme(aspect.ratio = 1, 
-          axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
+                                 "Preschool" = "mc_preschool"))
 ```
 
 -   Character (example must use functions from **stringr**)
@@ -463,7 +443,7 @@ person |>
 ```{r}
 #| label: wd-6-anti
 
-# Lab 5, 'More layers to this murder...'
+# Lab 5, 'More layers to this murder...' - Revised
 # Using an anti_join to confirm that our suspect does NOT have an interview
 prime_suspect <- drivers_license |>
   filter(height %in% c(65,66,67),
@@ -511,24 +491,8 @@ ca_childcare |>
                names_to = "age_cohort",
                values_to = "median_price") |> 
   mutate(age_cohort = factor(age_cohort, 
-                                  levels = c("mc_infant", "mc_toddler", "mc_preschool"),
-                                  labels = c("Infant", "Toddler", "Preschool"))) |> 
-  ggplot(mapping = aes(x = study_year, 
-                       y = median_price,
-                       color = census_region)) +
-    geom_point() +
-    geom_smooth() +
-    facet_wrap(~age_cohort) +
-    scale_x_continuous(breaks = seq(2008, 2018, by = 2)) +
-    scale_y_continuous(breaks = seq(100, 500, by = 100),
-                       limits = c(100, 500)) +
-    labs(x = "Study Year",
-         y = " ",
-         title = "Weekly Median Price for Center-based Childcare ($)",
-         color = "California Region") +
-    theme_bw() +
-    theme(aspect.ratio = 1, 
-          axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
+                             levels = c("mc_infant", "mc_toddler", "mc_preschool"),
+                             labels = c("Infant", "Toddler", "Preschool")))
 ```
 
 -   `pivot_wider()`
@@ -545,20 +509,16 @@ ca_childcare_median_income_by_region_over_time <- ca_childcare |>
               values_from = median_income, 
               names_prefix = "year_") |>
   arrange(desc(year_2018)) |>
-  select(c("census_region", "year_2008", "year_2018"))
+  select(c("census_region", 
+           "year_2008", 
+           "year_2018"))
 ```
 
 ## Reproducibility
 
 **R-1: I can create professional looking, reproducible analyses using RStudio projects, Quarto documents, and the here package.**
 
-The following assignments satisfy the above criteria:
-
--   Example 1
--   Example 2
--   Example 3
--   Example 4
--   Example 5
+I demonstrated this learning target in Lab 3, Lab/Challenge 4, and Lab 5.
 
 **R-2: I can write well documented and tidy code.**
 
@@ -619,6 +579,17 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: r-3-example
 
+# Lab 4, Q7 - Revised
+# This code would be reistant if for example, a new column prefixed with mc_ (Like mc_kindergarten) was added
+ca_childcare |> 
+  mutate(census_region = fct_relevel(census_region, regions)) |> 
+  filter(census_region %in% regions) |> 
+  select(study_year,
+         census_region,
+         contains("mc_")) |> 
+  pivot_longer(cols = contains("mc_"),
+               names_to = "age_cohort",
+               values_to = "median_price")
 ```
 
 -   Example (function stops)
@@ -637,6 +608,21 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: dvs-1-num
 
+# Challenge 4, 'Building a visualization'
+childcare_long |>
+  filter(study_year %in% c(2008, 2018)) |>
+  ggplot(mapping = aes(x = center_median_price,
+                       y = family_median_price)) +
+  geom_point(color = "steelblue",
+             alpha = 0.5) +
+  geom_smooth(method = "lm", 
+              color = "orchid4") +
+  facet_grid(study_year ~ age_cohort) +
+  labs(x = str_to_title("full-time median price charged for Center-based Care"),
+       y = str_to_title("full-time median price charged for Family Childcare"),
+       title = "Association between Center-based and Family Childcare Costs (2008 vs 2018)") +
+  theme_bw() +
+  theme(plot.title = element_text(face = "bold"))
 ```
 
 -   At least one numeric variable and one categorical variable
@@ -644,13 +630,51 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: dvs-2-num-cat
 
+# Challenge 3, Q2
+teacher_evals_compare |>
+ggplot(mapping = aes(x = sen_level, fill = SET_level)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(values = c("excellent" = "#b896d3", 
+                               "standard" = "#bb955b")) +
+  labs(
+    title = "Evaluation of Teachers' Use of Activities",
+    x = "Years of Experience",
+    y = NULL,
+    fill = "Evaluation Rating"
+  ) +
+  theme_bw() +
+  theme(
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    legend.position = "top",
+  )
 ```
 
 -   At least two categorical variables
 
 ```{r}
 #| label: dvs-2-cat
-
+#| 
+# Challenge 3, Q2
+teacher_evals_compare |>
+ggplot(mapping = aes(x = sen_level, fill = SET_level)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(values = c("excellent" = "#b896d3", 
+                               "standard" = "#bb955b")) +
+  labs(
+    title = "Evaluation of Teachers' Use of Activities",
+    x = "Years of Experience",
+    y = NULL,
+    fill = "Evaluation Rating"
+  ) +
+  theme_bw() +
+  theme(
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    legend.position = "top",
+  )
 ```
 
 -   Dates (time series plot)
@@ -658,6 +682,41 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: dvs-2-date
 
+# Lab 4, Q7
+ca_childcare |> 
+  mutate(census_region = fct_relevel(census_region, regions)) |> 
+  filter(census_region %in% regions) |> 
+  select(study_year,
+         census_region,
+         mc_infant,
+         mc_toddler,
+         mc_preschool) |> 
+  pivot_longer(cols = c(mc_infant,
+                        mc_toddler,
+                        mc_preschool),
+               names_to = "age_cohort",
+               values_to = "median_price") |> 
+  mutate(age_cohort = fct_recode(age_cohort, 
+                                 "Infant" = "mc_infant", 
+                                 "Toddler" = "mc_toddler", 
+                                 "Preschool" = "mc_preschool")) |> 
+  ggplot(mapping = aes(x = study_year, 
+                       y = median_price,
+                       color = census_region)) +
+    geom_point() +
+    geom_smooth(se = FALSE) +
+    facet_wrap(~age_cohort) +
+    scale_color_manual(values = colorRampPalette(brewer.pal(7, "Accent"))(10)) +
+    scale_x_continuous(breaks = seq(2008, 2018, by = 2)) +
+    scale_y_continuous(breaks = seq(100, 500, by = 100),
+                       limits = c(100, 500)) +
+    labs(x = "Study Year",
+         y = " ",
+         title = "Weekly Median Price for Center-based Childcare ($)",
+         color = "California Region") +
+    theme_bw() +
+    theme(aspect.ratio = 1, 
+          axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
 ```
 
 **DVS-2: I use plot modifications to make my visualization clear to the reader.**
@@ -667,6 +726,42 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: dvs-2-ex-1
 
+# Lab 4, Q7
+# Plot theme modified to have more readable (titled) x-axis text
+ca_childcare |> 
+  mutate(census_region = fct_relevel(census_region, regions)) |> 
+  filter(census_region %in% regions) |> 
+  select(study_year,
+         census_region,
+         mc_infant,
+         mc_toddler,
+         mc_preschool) |> 
+  pivot_longer(cols = c(mc_infant,
+                        mc_toddler,
+                        mc_preschool),
+               names_to = "age_cohort",
+               values_to = "median_price") |> 
+  mutate(age_cohort = fct_recode(age_cohort, 
+                                 "Infant" = "mc_infant", 
+                                 "Toddler" = "mc_toddler", 
+                                 "Preschool" = "mc_preschool")) |> 
+  ggplot(mapping = aes(x = study_year, 
+                       y = median_price,
+                       color = census_region)) +
+    geom_point() +
+    geom_smooth(se = FALSE) +
+    facet_wrap(~age_cohort) +
+    scale_color_manual(values = colorRampPalette(brewer.pal(7, "Accent"))(10)) +
+    scale_x_continuous(breaks = seq(2008, 2018, by = 2)) +
+    scale_y_continuous(breaks = seq(100, 500, by = 100),
+                       limits = c(100, 500)) +
+    labs(x = "Study Year",
+         y = " ",
+         title = "Weekly Median Price for Center-based Childcare ($)",
+         color = "California Region") +
+    theme_bw() +
+    theme(aspect.ratio = 1, 
+          axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
 ```
 
 -   I can modify my colors to be accessible to anyone's eyes
@@ -674,6 +769,42 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: dvs-2-ex-2
 
+# Lab 4, Q7
+# RColorBrewer palette used with colorRampPalette to produce an accessible, cohesive palette
+ca_childcare |> 
+  mutate(census_region = fct_relevel(census_region, regions)) |> 
+  filter(census_region %in% regions) |> 
+  select(study_year,
+         census_region,
+         mc_infant,
+         mc_toddler,
+         mc_preschool) |> 
+  pivot_longer(cols = c(mc_infant,
+                        mc_toddler,
+                        mc_preschool),
+               names_to = "age_cohort",
+               values_to = "median_price") |> 
+  mutate(age_cohort = fct_recode(age_cohort, 
+                                 "Infant" = "mc_infant", 
+                                 "Toddler" = "mc_toddler", 
+                                 "Preschool" = "mc_preschool")) |> 
+  ggplot(mapping = aes(x = study_year, 
+                       y = median_price,
+                       color = census_region)) +
+    geom_point() +
+    geom_smooth(se = FALSE) +
+    facet_wrap(~age_cohort) +
+    scale_color_manual(values = colorRampPalette(brewer.pal(7, "Accent"))(10)) +
+    scale_x_continuous(breaks = seq(2008, 2018, by = 2)) +
+    scale_y_continuous(breaks = seq(100, 500, by = 100),
+                       limits = c(100, 500)) +
+    labs(x = "Study Year",
+         y = " ",
+         title = "Weekly Median Price for Center-based Childcare ($)",
+         color = "California Region") +
+    theme_bw() +
+    theme(aspect.ratio = 1, 
+          axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
 ```
 
 -   I can modify my plot titles to clearly communicate the data context
@@ -681,6 +812,42 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: dvs-2-ex-3
 
+# Lab 4, Q7
+# Labels used to clearly communicate data context (In this case, weekly median price for childcare over time, by region and child age)
+ca_childcare |> 
+  mutate(census_region = fct_relevel(census_region, regions)) |> 
+  filter(census_region %in% regions) |> 
+  select(study_year,
+         census_region,
+         mc_infant,
+         mc_toddler,
+         mc_preschool) |> 
+  pivot_longer(cols = c(mc_infant,
+                        mc_toddler,
+                        mc_preschool),
+               names_to = "age_cohort",
+               values_to = "median_price") |> 
+  mutate(age_cohort = fct_recode(age_cohort, 
+                                 "Infant" = "mc_infant", 
+                                 "Toddler" = "mc_toddler", 
+                                 "Preschool" = "mc_preschool")) |> 
+  ggplot(mapping = aes(x = study_year, 
+                       y = median_price,
+                       color = census_region)) +
+    geom_point() +
+    geom_smooth(se = FALSE) +
+    facet_wrap(~age_cohort) +
+    scale_color_manual(values = colorRampPalette(brewer.pal(7, "Accent"))(10)) +
+    scale_x_continuous(breaks = seq(2008, 2018, by = 2)) +
+    scale_y_continuous(breaks = seq(100, 500, by = 100),
+                       limits = c(100, 500)) +
+    labs(x = "Study Year",
+         y = " ",
+         title = "Weekly Median Price for Center-based Childcare ($)",
+         color = "California Region") +
+    theme_bw() +
+    theme(aspect.ratio = 1, 
+          axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
 ```
 
 -   I can modify the text in my plot to be more readable
@@ -688,6 +855,20 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: dvs-2-ex-4
 
+# Lab 2, Q15
+# Angled x-axis text to be more readable
+ggplot(data = surveys, 
+       mapping = aes(x = species, y = weight)) +
+  geom_boxplot(outliers = FALSE) +
+  geom_jitter(color = 'steelblue', alpha = .05) + 
+  theme_bw() +
+  labs(title = 'Weight Distribution of Various Species \nin Portal, AZ', 
+       x = 'Species Name',
+       y = 'Weight (g)') +
+    theme(axis.text.x = element_text(angle = 45),
+          plot.title = element_text(size = rel(2), face = "bold"),
+        panel.grid.major = element_line(linewidth = .1),
+        panel.grid = element_line(color = 'slategray4'))
 ```
 
 -   I can reorder my legend to align with the colors in my plot
@@ -695,6 +876,42 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: dvs-2-ex-5
 
+# Lab 4, Q7
+# Used fct_relevel() to control the order of the legend
+ca_childcare |> 
+  mutate(census_region = fct_relevel(census_region, regions)) |> 
+  filter(census_region %in% regions) |> 
+  select(study_year,
+         census_region,
+         mc_infant,
+         mc_toddler,
+         mc_preschool) |> 
+  pivot_longer(cols = c(mc_infant,
+                        mc_toddler,
+                        mc_preschool),
+               names_to = "age_cohort",
+               values_to = "median_price") |> 
+  mutate(age_cohort = fct_recode(age_cohort, 
+                                 "Infant" = "mc_infant", 
+                                 "Toddler" = "mc_toddler", 
+                                 "Preschool" = "mc_preschool")) |> 
+  ggplot(mapping = aes(x = study_year, 
+                       y = median_price,
+                       color = census_region)) +
+    geom_point() +
+    geom_smooth(se = FALSE) +
+    facet_wrap(~age_cohort) +
+    scale_color_manual(values = colorRampPalette(brewer.pal(7, "Accent"))(10)) +
+    scale_x_continuous(breaks = seq(2008, 2018, by = 2)) +
+    scale_y_continuous(breaks = seq(100, 500, by = 100),
+                       limits = c(100, 500)) +
+    labs(x = "Study Year",
+         y = " ",
+         title = "Weekly Median Price for Center-based Childcare ($)",
+         color = "California Region") +
+    theme_bw() +
+    theme(aspect.ratio = 1, 
+          axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
 ```
 
 **DVS-3: I show creativity in my visualizations**
@@ -704,6 +921,26 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: dvs-3-1-ex-1
 
+# Challenge 3, Q2
+# Using custom hex colors
+teacher_evals_compare |>
+ggplot(mapping = aes(x = sen_level, fill = SET_level)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(values = c("excellent" = "#b896d3", 
+                               "standard" = "#bb955b")) +
+  labs(
+    title = "Evaluation of Teachers' Use of Activities",
+    x = "Years of Experience",
+    y = NULL,
+    fill = "Evaluation Rating"
+  ) +
+  theme_bw() +
+  theme(
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    legend.position = "top",
+  )
 ```
 
 -   I can use non-standard colors (Example 2)
@@ -711,6 +948,22 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: dvs-3-1-ex-2
 
+# Challenge 4, 'Buildinga visualization'
+# Using custom R colors
+childcare_long |>
+  filter(study_year %in% c(2008, 2018)) |>
+  ggplot(mapping = aes(x = center_median_price,
+                       y = family_median_price)) +
+  geom_point(color = "steelblue",
+             alpha = 0.5) +
+  geom_smooth(method = "lm", 
+              color = "orchid4") +
+  facet_grid(study_year ~ age_cohort) +
+  labs(x = str_to_title("full-time median price charged for Center-based Care"),
+       y = str_to_title("full-time median price charged for Family Childcare"),
+       title = "Association between Center-based and Family Childcare Costs (2008 vs 2018)") +
+  theme_bw() +
+  theme(plot.title = element_text(face = "bold"))
 ```
 
 -   I can use annotations (e.g., `geom_text()`)
@@ -718,6 +971,32 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: dvs-3-2
 
+# Lab 2, Q10 - Revised
+# This revision was a bit extensive. Used ChatGPT to help me learn the geom_text() arguments, convo can be found here: 
+#https://chatgpt.com/share/68fec79f-2a3c-8002-b97c-fd43080e333d 
+species_n <- surveys |>
+  group_by(species) |>
+  summarize(n = n(),
+            y = max(weight),
+            .groups = "drop") |>
+  mutate(label = n)
+
+ggplot(data = surveys, 
+       mapping = aes(x = species, y = weight)) +
+  geom_boxplot(outliers = FALSE) +
+  geom_jitter(color = 'steelblue', alpha = .05) + 
+  geom_text(data = species_n,
+            mapping = aes(x = species, 
+                          y = y, 
+                          label = label)) +
+  theme_bw() +
+  labs(title = 'Weight Distribution of Various Species \nin Portal, AZ', 
+       x = 'Species Name',
+       y = 'Weight (g)') +
+    theme(axis.text.x = element_text(angle = 45),
+          plot.title = element_text(size = rel(2), face = "bold"),
+        panel.grid.major = element_line(linewidth = .1),
+        panel.grid = element_line(color = 'slategray4'))
 ```
 
 -   I can choose creative geometries (e.g., `geom_segment()`, `geom_ribbon)()`)
@@ -734,6 +1013,14 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: dvs-4-summarize
 
+  # Lab 3, Q7
+  teacher_evals_unique |> 
+  summarize(
+    min_seniority = min(seniority),
+    max_seniority = max(seniority),
+    mean_seniority = mean(seniority),
+    median_seniority = median(seniority)
+  )
 ```
 
 -   Example using `across()`
@@ -741,6 +1028,17 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: dvs-4-across
 
+# Lab 3, Q7 - Revised
+teacher_evals_unique |> 
+  summarize(
+    across(.cols = c(seniority, 
+                     SET_score_avg, 
+                     no_participants), 
+           .fns = c(min = min, 
+                    max = max, 
+                    mean = mean, 
+                    median = median))
+  )
 ```
 
 **DVS-5: I can find summaries of variables across multiple groups.**
@@ -750,6 +1048,20 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: dvs-5-1
 
+# Lab 4, Q5
+ca_childcare |>
+  group_by(census_region, 
+           study_year) |>
+  summarize(median_income = median(mhi_2018, na.rm = TRUE)) |>
+  ungroup() |>
+  pivot_wider(names_from = study_year, 
+              values_from = median_income, 
+              names_prefix = "median_income_") |>
+  arrange(desc(median_income_2018)) |>
+  select(c("census_region", 
+           "median_income_2008", 
+           "median_income_2018")) |>
+  kable()
 ```
 
 -   Example 2
@@ -757,6 +1069,19 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: dvs-5-2
 
+# Lab 3, Q10
+teacher_evals_clean |>
+  filter(question_no == 901) |>
+  group_by(teacher_id) |>
+  summarize(
+    q1_avg = mean(SET_score_avg),
+    n_courses = n_distinct(course_id),
+    .groups = "drop") |>
+  filter(n_courses >= 5) |>
+  ungroup() |> 
+  filter(q1_avg == min(q1_avg) | q1_avg == max(q1_avg)) |> 
+  arrange(q1_avg) |>
+  kable() 
 ```
 
 **DVS-6: I can create tables which make my summaries clear to the reader.**
@@ -766,6 +1091,20 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: dvs-6-ex-1
 
+# Lab 4, Q5
+ca_childcare |>
+  group_by(census_region, 
+           study_year) |>
+  summarize(median_income = median(mhi_2018, na.rm = TRUE)) |>
+  ungroup() |>
+  pivot_wider(names_from = study_year, 
+              values_from = median_income, 
+              names_prefix = "median_income_") |>
+  arrange(desc(median_income_2018)) |>
+  select(c("census_region", 
+           "median_income_2008", 
+           "median_income_2018")) |>
+  kable()
 ```
 
 -   I can modify the text in my table to be more readable (e.g., bold face for column headers)
@@ -773,12 +1112,36 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: dvs-6-ex-2
 
+# Lab 5, 'Crime Scene Report'
+# Using kable() for more readable outputs
+crime_scene_report |>
+  mutate(date = as.character(date),
+         date = ymd(date)) |>
+  filter(date == ymd('2018-1-15'),
+         type == 'murder') |>
+  kable()
 ```
 
 -   I can arrange my table to have an intuitive ordering
 
 ```{r}
 #| label: dvs-6-ex-3
+
+# Lab 4, Q5
+# Using arrange() to sort by descending median income (2018)
+ca_childcare |>
+  group_by(census_region, 
+           study_year) |>
+  summarize(median_income = median(mhi_2018, na.rm = TRUE)) |>
+  ungroup() |>
+  pivot_wider(names_from = study_year, 
+              values_from = median_income, 
+              names_prefix = "median_income_") |>
+  arrange(desc(median_income_2018)) |>
+  select(c("census_region", 
+           "median_income_2008", 
+           "median_income_2018")) |>
+  kable()
 
 ```
 
@@ -789,6 +1152,15 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: dvs-7-ex-1
 
+# Lab 5, 'Crime Scene Report'
+# Using kable() styling options to add non-default colors
+crime_scene_report |>
+  mutate(date = as.character(date),
+         date = ymd(date)) |>
+  filter(date == ymd('2018-1-15'),
+         type == 'murder') |>
+  kable() |>
+  kable_styling(bootstrap_options = "striped")
 ```
 
 -   I can modify the layout of my table to be more readable (e.g., `pivot_longer()` or `pivot_wider()`)
@@ -796,6 +1168,24 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: dvs-7-ex-2
 
+# Lab 4, Q7
+ca_childcare |> 
+  mutate(census_region = fct_relevel(census_region, regions)) |> 
+  filter(census_region %in% regions) |> 
+  select(study_year,
+         census_region,
+         mc_infant,
+         mc_toddler,
+         mc_preschool) |> 
+  pivot_longer(cols = c(mc_infant,
+                        mc_toddler,
+                        mc_preschool),
+               names_to = "age_cohort",
+               values_to = "median_price") |> 
+  mutate(age_cohort = fct_recode(age_cohort, 
+                                 "Infant" = "mc_infant", 
+                                 "Toddler" = "mc_toddler", 
+                                 "Preschool" = "mc_preschool"))
 ```
 
 ## Program Efficiency
@@ -979,9 +1369,29 @@ table(teacher_evals_compare$SET_level,
 
 <!-- How did you revise your thinking throughout the course? How did you revise your thinking on the code examples you have provided in your portfolio? -->
 
+-   Example #1:
+
+> Early on, I was stubborn to use the here package because I didn't see why I couldn't just use relative paths. I received feedback on one of my labs to try and utilize the package, which prompted me to go to ChatGPT and have a conversation.
+>
+> See it here: <https://chatgpt.com/share/68e0545e-2b58-8002-ab0e-007ade26bc1a>
+>
+> After this chat, I realized why the here package was useful, and why it makes sense to use especially in data science workflows. My mind was changed and I'm now perfectly happy using the here package going forward
+
+-   Example #2:
+
+> I have been doing my best to be thorough with my revisions (especially with the last couple labs). Not only do I make the corrections, but I reflect on what makes them an improvement in the first place. For example, I have realized that I need to consider how these Quarto notebooks are supposed to be self-sufficient investigations, meaning that I need to be more detailed when talking about the data we're analyzing and what my conclusions mean in context. Additionally, it is important to use modern tools/standards, such as using the tidyverse family of packages and taking advantage of the powerful functions they provide. This not only makes R code more readable and understandable, but more efficient/robust behind the scenes.
+
 <!-- For the revisions included in your Portfolio, to help me understand the nature of your revisions, please denote somehow the feedback I provided you (e.g., boldface, italics, colored text) before your revisions. -->
 
 ## Extending My Thinking
+
+-   Example #1: Extending my thinking with peers
+
+> I sought out help for the week 3 lab in the discord, and was fortunate to get some help from Otis. He showed me how he used filtering to obtain the min and max of a column within a single table, rather than my approach which used slice_min and slice_max separately. But, he also mentioned how he "kabled that bad boy", which introduced me to kable(). Kable() is a great function which lets you output data frames into HTML, which looks great in Quarto reports. Since learning it from Otis, I used it in all my labs.
+
+-   Example #2: Retroactively improving my code standards
+
+> I also extended my thinking all throughout this portfolio. For example, some of the code chunks I took from the first couple weeks worth of labs used unecessary intermediate objects and didn't use modern tools like piping. When I included these examples in my portfolio, I revised them to best reflect the standards we have been taught in class.
 
 <!-- How did you extended your thinking throughout the course? How did you extend your thinking on the code examples you have provided in your portfolio? -->
 
@@ -989,4 +1399,16 @@ table(teacher_evals_compare$SET_level,
 
 <!-- Include an image or a description of feedback you gave that you are proud of (either in a peer review or in Discord). -->
 
+-   Example #1: Discord Collaboration
+
+> ![](images/clipboard-158684500.png){width="330"}
+
 <!-- Include a description of how you grew as a collaborator through the weekly pair programming activities.   -->
+
+-   Example #2: Pair Programming
+
+> I grew as a collaborator through the pair programming activities by being more mindful of helping my partners learn, rather than jumping to the answer. There would be times when I was the typer, and my partner was struggling to remember which function to call. Rather than just telling them my approach, I learned to let them experiment and help nudge them in the right direction when they asked for help.
+>
+> In return, there were plenty of times where I was on the other side of this, and I appreciated being given time for trial and error where I felt like I could learn and make connections on my own.
+>
+> I also enjoyed how each pairing was a new dynamic. Everyone I worked with was great, and it was fun getting to see how everyone has different approaches with these pair programming activities.
