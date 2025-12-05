@@ -23,8 +23,8 @@ execute:
 ```{r}
 #| label: wd-1-csv-1
 
-# Lab 2, Q1
-surveys <- read_csv("surveys.csv")
+# Lab 2, Q1 - Revised
+surveys <- read_csv(here('week-1', 'surveys.csv'))
 ```
 
 -   `csv` Example 2
@@ -211,20 +211,14 @@ crime_scene_report |>
 ```{r}
 #| label: wd-4-numeric-ex-1
 
-# Lab 3, Q10
-# Creating a new numeric column via summarize
-teacher_evals_clean |>
-  filter(question_no == 901) |>
-  group_by(teacher_id) |>
-  summarize(
-    q1_avg = mean(SET_score_avg),
-    n_courses = n_distinct(course_id),
-    .groups = "drop") |>
-  filter(n_courses >= 5) |>
-  ungroup() |> 
-  filter(q1_avg == min(q1_avg) | q1_avg == max(q1_avg)) |> 
-  arrange(q1_avg) |>
-  kable() 
+# Challenge 7, Q5
+# Creating a new numeric column using a function
+condition_index <- function(weight, length) {
+  weight / (length * length * length) * 100
+}
+
+fish |>
+  mutate(condition_index = condition_index(weight, length))
 ```
 
 -   Numeric Example 2
@@ -247,6 +241,8 @@ teacher_evals_clean |>
 
 # Lab 4, Q7
 # Using fct_recode to rename levels
+regions <- c("San Francisco", "Orange", "Los Angeles", "Northern San Joaquin", "Southern San Joaquin", "Central Coast", "Inland Empire", "Superior", "San Diego-Imperial", "North Coast")
+
 ca_childcare |> 
   mutate(census_region = fct_relevel(census_region, regions)) |> 
   filter(census_region %in% regions) |> 
@@ -297,23 +293,19 @@ ca_childcare |>
 ```{r}
 #| label: wd-4-string
 
-# Lab 4, Q4
-# Using str_remove() to modify county_name
-ca_childcare <- ca_childcare |> 
-  mutate(county_name = str_remove(county_name, " County"),
-         census_region = fct_collapse(
-           county_name,
-           "Superior" = superior_counties,
-           "North Coast" = north_coast_counties,
-           "San Francisco" = san_fran_counties,
-           "Northern San Joaquin" = n_san_joaquin_counties,
-           "Central Coast" = central_coast_counties,
-           "Southern San Joaquin" = s_san_joaquin_counties,
-           "Inland Empire" = inland_counties,
-           "Los Angeles" = la_county,
-           "Orange" = orange_county,
-           "San Diego-Imperial" = san_diego_imperial_counties),
-          census_region = factor(census_region, levels = regions))
+# Lab 5, 'Looking for witness #2' - Revised
+# Using str_c() to create a detailed testimony column 
+person |>
+  filter(address_street_name == "Franklin Ave",
+         str_detect(name, 
+                    pattern = "^Annabel")) |>
+  rename('person_id' = 'id') |>
+  left_join(interview) |>
+  mutate(testimony = str_c('Testimony of ID #', person_id, 
+                           ' - ', name, 
+                           ': ', transcript)) |>
+  select(testimony) |>
+  kable()
 ```
 
 -   Date (example must use functions from **lubridate**)
@@ -337,17 +329,11 @@ crime_scene_report |>
 ```{r}
 #| label: wd-5-left-ex-1
 
-# Lab 5, 'Looking for Witness'
-person |>
-  filter(address_street_name == "Franklin Ave",
-         str_detect(name, 
-                    pattern = "^Annabel")) |>
-  rename('person_id' = 'id') |>
-  left_join(interview) |>
-  select(person_id,
-         name,
-         transcript) |>
-  kable()
+# Lab 4, Q2
+ca_childcare <- childcare_costs|>
+  left_join(counties, by = 'county_fips_code') |>
+  filter(state_abbreviation == 'CA')
+
 ```
 
 -   `right_join()` Example 1
@@ -374,13 +360,10 @@ person |>
 ```{r}
 #| label: wd-5-left-right-ex-2
 
-# Lab 5, 'Investigating Witness #1'
-person |>
-  filter(address_street_name == "Northwestern Dr",
-         address_number == max(address_number)) |>
-  left_join(interview, 
-            by = c('id' = 'person_id')) |>
-  kable()
+# Lab 4, Q3
+ca_childcare <- ca_childcare |>
+  left_join(tax_rev, by = c("study_year" = "year", 
+                            "county_name" = "entity_name"))
 ```
 
 -   `inner_join()` Example 1
@@ -403,14 +386,22 @@ person |>
 ```{r}
 #| label: wd-5-inner-ex-2
 
-# Lab 5, 'Looking for Witness' - Revised
-person |>
-  filter(address_street_name == "Franklin Ave",
-         str_detect(name, 
-                    pattern = "^Annabel")) |>
-  rename('person_id' = 'id') |>
-  inner_join(interview) |>
-  select(person_id,
+# Lab 5, 'Tracking down the suspect' - Revised
+get_fit_now_member |>
+  filter(str_detect(id, 
+                    pattern = "^48(z|Z)"),
+         membership_status == 'gold') |>
+  inner_join(person, 
+             by = c('person_id' = 'id', 'name' = 'name')) |>
+  inner_join(drivers_license, 
+             by = c('license_id' = 'id')) |>
+  filter(str_detect(plate_number, 
+                    pattern = 'H42W')) |>
+  inner_join(interview, 
+             by = 'person_id') |>
+  select(id,
+         plate_number,
+         membership_status,
          name,
          transcript) |>
   kable()
@@ -423,19 +414,16 @@ person |>
 ```{r}
 #| label: wd-6-semi
 
-# Lab 5, 'Looking for Witness #2'
-# Using semi_join to only grab people who we have an interview transcript for
+# Lab 5, 'More layers to this murder...' - Revised
+# find possible suspects based off some criteria
+suspect_criteria <- drivers_license |>
+  filter(height %in% c(65,66,67),
+         hair_color == 'red',
+         car_make == 'Tesla')
+
+# Filter 'person' to keep only those matching the criteria
 person |>
-  semi_join(interview, by = c('id' = 'person_id')) |> 
-  filter(address_street_name == "Franklin Ave",
-         str_detect(name, 
-                    pattern = "^Annabel")) |>
-  rename('person_id' = 'id') |>
-  left_join(interview) |>
-  select(person_id,
-         name,
-         transcript) |>
-  kable()
+  semi_join(suspect_criteria, by = c("license_id" = "id"))
 ```
 
 -   `anti_join()`
@@ -443,30 +431,23 @@ person |>
 ```{r}
 #| label: wd-6-anti
 
-# Lab 5, 'More layers to this murder...' - Revised
-# Using an anti_join to confirm that our suspect does NOT have an interview
-prime_suspect <- drivers_license |>
-  filter(height %in% c(65,66,67),
-         hair_color == 'red',
-         car_make == 'Tesla') |>
-  rename("license_id" = "id") |>
-  left_join(person, 
-            by = 'license_id') |>
-  left_join(facebook_event_checkin, 
-            by = c('id' = 'person_id')) |>
-  filter(event_name == "SQL Symphony Concert") |>
-  count(license_id,
-        id,
-        name) |>
-  filter(n == 3) |>
-  rename("person_id" = "id") |>
-  left_join(interview, 
-            by = "person_id")
+# Lab 3, Q9
+# find which teacher-course combos asked all 9 questions
+asked_all <- teacher_evals_clean |>
+  count(teacher_id, course_id) |>
+  filter(n == 9)
 
-prime_suspect |>
-  anti_join(interview, by = "person_id") |>
-  kable()
+# will return # of combos who DID ask all questions
+asked_all |>
+  nrow()
 
+# will return # of combos of who DID NOT ask all questions 
+teacher_evals_clean |>
+  anti_join(asked_all, by = c("teacher_id", "course_id")) |>
+  nrow()
+
+# 49 asked all questions
+# 6376 failed to ask all the questions
 ```
 
 **WD-7: I can pivot dataframes from long to wide and visa versa**
@@ -518,7 +499,7 @@ ca_childcare_median_income_by_region_over_time <- ca_childcare |>
 
 **R-1: I can create professional looking, reproducible analyses using RStudio projects, Quarto documents, and the here package.**
 
-I demonstrated this learning target in Lab 3, Lab/Challenge 4, and Lab 5.
+I demonstrated this learning target in Lab 3, Lab/Challenge 4, and Lab 5, Lab 7, Lab 8, Lab/Challenge 9
 
 **R-2: I can write well documented and tidy code.**
 
@@ -653,13 +634,13 @@ ggplot(data = surveys,
 ```{r}
 #| label: dvs-2-cat
  
-# Challenge 3, Q2
+# Challenge 3, Q2 - Revised
 # categorical: seniority level
 # categorical: SET level
 teacher_evals_compare |>
 ggplot(mapping = aes(x = sen_level, fill = SET_level)) +
   geom_bar(position = "fill") +
-  scale_y_continuous(labels = scales::percent) +
+  scale_y_continuous(labels = scales::labels_percent) +
   scale_fill_manual(values = c("excellent" = "#b896d3", 
                                "standard" = "#bb955b")) +
   labs(
@@ -726,42 +707,26 @@ ca_childcare |>
 ```{r}
 #| label: dvs-2-ex-1
 
-# Lab 4, Q7
-# Plot theme modified to have more readable (titled) x-axis text
-ca_childcare |> 
-  mutate(census_region = fct_relevel(census_region, regions)) |> 
-  filter(census_region %in% regions) |> 
-  select(study_year,
-         census_region,
-         mc_infant,
-         mc_toddler,
-         mc_preschool) |> 
-  pivot_longer(cols = c(mc_infant,
-                        mc_toddler,
-                        mc_preschool),
-               names_to = "age_cohort",
-               values_to = "median_price") |> 
-  mutate(age_cohort = fct_recode(age_cohort, 
-                                 "Infant" = "mc_infant", 
-                                 "Toddler" = "mc_toddler", 
-                                 "Preschool" = "mc_preschool")) |> 
-  ggplot(mapping = aes(x = study_year, 
-                       y = median_price,
-                       color = census_region)) +
-    geom_point() +
-    geom_smooth(se = FALSE) +
-    facet_wrap(~age_cohort) +
-    scale_color_manual(values = colorRampPalette(brewer.pal(7, "Accent"))(10)) +
-    scale_x_continuous(breaks = seq(2008, 2018, by = 2)) +
-    scale_y_continuous(breaks = seq(100, 500, by = 100),
-                       limits = c(100, 500)) +
-    labs(x = "Study Year",
-         y = " ",
-         title = "Weekly Median Price for Center-based Childcare ($)",
-         color = "California Region") +
-    theme_bw() +
-    theme(aspect.ratio = 1, 
-          axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
+# Challenge 3, Q2
+# Plot theme modified to change grid lines and reposition legend
+teacher_evals_compare |>
+ggplot(mapping = aes(x = sen_level, fill = SET_level)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(values = c("excellent" = "#b896d3", 
+                               "standard" = "#bb955b")) +
+  labs(
+    title = "Evaluation of Teachers' Use of Activities",
+    x = "Years of Experience",
+    y = NULL,
+    fill = "Evaluation Rating"
+  ) +
+  theme_bw() +
+  theme(
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    legend.position = "top",
+  )
 ```
 
 -   I can modify my colors to be accessible to anyone's eyes
@@ -769,42 +734,78 @@ ca_childcare |>
 ```{r}
 #| label: dvs-2-ex-2
 
-# Lab 4, Q7
-# RColorBrewer palette used with colorRampPalette to produce an accessible, cohesive palette
-ca_childcare |> 
-  mutate(census_region = fct_relevel(census_region, regions)) |> 
-  filter(census_region %in% regions) |> 
-  select(study_year,
-         census_region,
-         mc_infant,
-         mc_toddler,
-         mc_preschool) |> 
-  pivot_longer(cols = c(mc_infant,
-                        mc_toddler,
-                        mc_preschool),
-               names_to = "age_cohort",
-               values_to = "median_price") |> 
-  mutate(age_cohort = fct_recode(age_cohort, 
-                                 "Infant" = "mc_infant", 
-                                 "Toddler" = "mc_toddler", 
-                                 "Preschool" = "mc_preschool")) |> 
-  ggplot(mapping = aes(x = study_year, 
-                       y = median_price,
-                       color = census_region)) +
-    geom_point() +
-    geom_smooth(se = FALSE) +
-    facet_wrap(~age_cohort) +
-    scale_color_manual(values = colorRampPalette(brewer.pal(7, "Accent"))(10)) +
-    scale_x_continuous(breaks = seq(2008, 2018, by = 2)) +
-    scale_y_continuous(breaks = seq(100, 500, by = 100),
-                       limits = c(100, 500)) +
-    labs(x = "Study Year",
-         y = " ",
-         title = "Weekly Median Price for Center-based Childcare ($)",
-         color = "California Region") +
-    theme_bw() +
-    theme(aspect.ratio = 1, 
-          axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
+# Lab 8, Q3
+# RColorBrewer palette used in style_plot() to produce an accessible, cohesive palette
+# Both shape and color utilized in pretty_scatter() to be color blind friendly
+
+# helper function for building labels
+labelize <- function(var){
+  enquo(var) |>
+  as_label() |>
+  str_replace_all(pattern = "_", 
+                  replacement = " ") |>
+  str_to_title()
+}
+
+# create a "pretty" scatterplot :)
+pretty_scatter <- function(df, x, y, cat){
+  title_lab = englue("Scatterplot of {{x}} and {{y}} by {{cat}}") |>
+              str_replace_all(pattern = "_", 
+                              replacement = " ") |>
+              str_to_title()
+  x_lab = labelize({{x}})
+  y_lab = labelize({{y}})
+  color_lab = labelize({{cat}})
+  
+  df |>
+    ggplot(mapping = aes(x = {{x}}, 
+                         y = {{y}}, 
+                         color = {{cat}},
+                         shape = {{cat}})) +
+      geom_point() +
+      labs(
+        title = title_lab,
+        x = x_lab,
+        y = y_lab,
+        color = color_lab
+           ) +
+      guides(
+        color = guide_legend(title = color_lab),
+        shape = guide_legend(title = color_lab)
+      ) 
+}
+
+style_plot <- function(plot, 
+                       aesthetic = "fill", 
+                       theme_fn = theme_bw(), 
+                       palette = RColorBrewer::brewer.pal(8, "Accent")) {
+  
+  if (aesthetic == "fill") {
+      plot + 
+      scale_fill_manual(values = palette) +
+      theme_fn +
+      theme(
+        plot.title = element_text(face = "bold")
+      )
+  } else if (aesthetic == "color") {
+      plot + 
+      scale_color_manual(values = palette) +
+      theme_fn +
+      theme(
+        plot.title = element_text(face = "bold")
+      )
+  } else {
+    stop("Not a valid color aesthetic. Choose 'fill' or 'color'.")
+  }
+}
+
+penguins |>
+  pretty_scatter(x = flipper_length_mm, 
+                 y = body_mass_g, 
+                 cat = species) |>
+  style_plot(theme_fn = theme_bw(), 
+             palette = RColorBrewer::brewer.pal(2, "Set1"), 
+             aesthetic = "color")
 ```
 
 -   I can modify my plot titles to clearly communicate the data context
@@ -878,6 +879,8 @@ ggplot(data = surveys,
 
 # Lab 4, Q7
 # Used fct_relevel() to control the order of the legend
+regions <- c("San Francisco", "Orange", "Los Angeles", "Northern San Joaquin", "Southern San Joaquin", "Central Coast", "Inland Empire", "Superior", "San Diego-Imperial", "North Coast")
+
 ca_childcare |> 
   mutate(census_region = fct_relevel(census_region, regions)) |> 
   filter(census_region %in% regions) |> 
@@ -948,22 +951,42 @@ ggplot(mapping = aes(x = sen_level, fill = SET_level)) +
 ```{r}
 #| label: dvs-3-1-ex-2
 
-# Challenge 4, 'Buildinga visualization'
-# Using custom R colors
-childcare_long |>
-  filter(study_year %in% c(2008, 2018)) |>
-  ggplot(mapping = aes(x = center_median_price,
-                       y = family_median_price)) +
-  geom_point(color = "steelblue",
-             alpha = 0.5) +
-  geom_smooth(method = "lm", 
-              color = "orchid4") +
-  facet_grid(study_year ~ age_cohort) +
-  labs(x = str_to_title("full-time median price charged for Center-based Care"),
-       y = str_to_title("full-time median price charged for Family Childcare"),
-       title = "Association between Center-based and Family Childcare Costs (2008 vs 2018)") +
-  theme_bw() +
-  theme(plot.title = element_text(face = "bold"))
+# Lab 4, Q7
+# Using RColorBrewer and colorRampPalette()
+ca_childcare |> 
+  mutate(census_region = fct_relevel(census_region, regions)) |> 
+  filter(census_region %in% regions) |> 
+  select(study_year,
+         census_region,
+         mc_infant,
+         mc_toddler,
+         mc_preschool) |> 
+  pivot_longer(cols = c(mc_infant,
+                        mc_toddler,
+                        mc_preschool),
+               names_to = "age_cohort",
+               values_to = "median_price") |> 
+  mutate(age_cohort = fct_recode(age_cohort, 
+                                 "Infant" = "mc_infant", 
+                                 "Toddler" = "mc_toddler", 
+                                 "Preschool" = "mc_preschool")) |> 
+  ggplot(mapping = aes(x = study_year, 
+                       y = median_price,
+                       color = census_region)) +
+    geom_point() +
+    geom_smooth(se = FALSE) +
+    facet_wrap(~age_cohort) +
+    scale_color_manual(values = colorRampPalette(brewer.pal(7, "Accent"))(10)) +
+    scale_x_continuous(breaks = seq(2008, 2018, by = 2)) +
+    scale_y_continuous(breaks = seq(100, 500, by = 100),
+                       limits = c(100, 500)) +
+    labs(x = "Study Year",
+         y = " ",
+         title = "Weekly Median Price for Center-based Childcare ($)",
+         color = "California Region") +
+    theme_bw() +
+    theme(aspect.ratio = 1, 
+          axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
 ```
 
 -   I can use annotations (e.g., `geom_text()`)
@@ -971,30 +994,25 @@ childcare_long |>
 ```{r}
 #| label: dvs-3-2
 
-# Lab 2, Q10 - Revised
-# This revision was a bit extensive. Used ChatGPT to help me learn the geom_text() arguments, convo can be found here: 
-#https://chatgpt.com/share/68fec79f-2a3c-8002-b97c-fd43080e333d 
-species_n <- surveys |>
-  group_by(species) |>
-  summarize(n = n(),
-            y = max(weight),
-            .groups = "drop") |>
-  mutate(label = n)
+# Lab 2, Q17 - Revised
+# Using geom_text() to display species counts
+species_counts <- surveys |>
+  count(species)
 
 ggplot(data = surveys, 
-       mapping = aes(x = species, y = weight)) +
+       mapping = aes(y = species, x = weight)) +
   geom_boxplot(outliers = FALSE) +
   geom_jitter(color = 'steelblue', alpha = .05) + 
-  geom_text(data = species_n,
-            mapping = aes(x = species, 
-                          y = y, 
-                          label = label)) +
+  geom_text(
+    data = species_counts, 
+    aes(y = species, x = 320, label = str_c("n = ", n)),
+    size = 3
+  ) +
   theme_bw() +
   labs(title = 'Weight Distribution of Various Species \nin Portal, AZ', 
        x = 'Species Name',
        y = 'Weight (g)') +
-    theme(axis.text.x = element_text(angle = 45),
-          plot.title = element_text(size = rel(2), face = "bold"),
+  theme(plot.title = element_text(size = rel(2), face = "bold"),
         panel.grid.major = element_line(linewidth = .1),
         panel.grid = element_line(color = 'slategray4'))
 ```
@@ -1004,6 +1022,29 @@ ggplot(data = surveys,
 ```{r}
 #| label: dvs-3-3
 
+# Lab 10, Q13
+# Using geom_segment() and geom_vline()
+ci_dat |>
+  mutate(index = row_number(),
+         is_covered = as_factor(is_covered)) |>
+  filter(index <= 100) |>
+  ggplot() +
+    geom_segment(aes(x = lower_bound_ci,
+                   xend = upper_bound_ci,
+                   y = index,
+                   yend = index,
+                   color = is_covered)) +
+    scale_color_manual(values = c("1" = "#0072B2", "0" = "#c8251d"),
+                       labels = c("1" = "True", "0" = "False"),
+                       name = "Covered?") +
+    geom_vline(xintercept = .5, linetype = "dashed", color = "black") +
+    labs(
+      title = "95% Confidence Intervals of Estimated Regression Slope for 100 Simulated Datasets",
+      subtitle = "Intervals that missed the population slope (.5) are highlighted in red",
+      x = "Slope Coefficient Estimate",
+      y = "")  +
+    theme_bw() +
+    theme(plot.title = element_text(face = "bold"))
 ```
 
 **DVS-4: I can calculate numerical summaries of variables.**
@@ -1113,13 +1154,17 @@ ca_childcare |>
 #| label: dvs-6-ex-2
 
 # Lab 5, 'Crime Scene Report'
-# Using kable() for more readable outputs
+# Using gt() to bold column labels
 crime_scene_report |>
   mutate(date = as.character(date),
          date = ymd(date)) |>
   filter(date == ymd('2018-1-15'),
          type == 'murder') |>
-  kable()
+  gt() |>
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_column_labels()
+  )
 ```
 
 -   I can arrange my table to have an intuitive ordering
@@ -1275,10 +1320,11 @@ teacher_evals_unique |>
 # Lab 3, Q7 - Revised
 teacher_evals_unique |> 
   summarize(
-    across(seniority, c(min = min, 
-                        max = max, 
-                        mean = mean, 
-                        median = median))
+    across(.cols = seniority, 
+           .fns = c(min = min, 
+                    max = max, 
+                    mean = mean, 
+                    median = median))
   )
 ```
 
@@ -1287,13 +1333,36 @@ teacher_evals_unique |>
 ```{r}
 #| label: pe-3-map-1
 
+# Lab 10, Q1
+randomBabies <- function(n_babies){
+  babies <- tibble(baby_id = 1:n_babies,
+                   parent_id = sample(1:n_babies,
+                                      size = n_babies,
+                                      replace = FALSE))
+  babies |>
+    filter(baby_id == parent_id) |>
+    nrow()
+}
+
+results <- map_int(.x = 1:10000,
+                   .f = ~randomBabies(n_babies = 4)
+                  )
+
 ```
 
--   using a `map()` function with **more than one** input (e.g., `map_2()` or `pmap()`)
+-   using a `map()` function with **one** input (separate example from above)
 
 ```{r}
 #| label: pe-3-map-2
 
+# Lab 9, Q7
+fish |>
+  map_int(~ sum(is.na(.x))) |>
+  enframe(name = "variable", value = "n_missing") |>
+  kable(
+    caption = "Number of Missing Values per Variable in the `fish` Dataset",
+    col.names = c("Variable", "# of Missing Values")
+  )
 ```
 
 **PE-4: I can use modern tools when carrying out my analysis.**
@@ -1303,16 +1372,15 @@ teacher_evals_unique |>
 ```{r}
 #| label: pe-4-1
 
-# Challenge 3, Q1
-# if_else() and case_when() are modern functions included with dplyr. I was able to learn why these new functions are improvements over the base versions here:
-# https://chatgpt.com/share/68fedf06-a534-8002-8669-25d29be64a49
-teacher_evals_compare <- teacher_evals |>
-  filter(question_no == 903) |>
-  mutate(SET_level = if_else(SET_score_avg >= 4, "excellent", "standard"),
-         sen_level = case_when(seniority <= 4 ~ "junior",
-                               seniority <= 8 ~ "senior",
-                               seniority > 8 ~ "very senior")) |>
-  select(course_id, SET_level, sen_level)
+# Lab 7, Q1
+# if_any() can efficiently look through the whole dataframe for missing values. This is the preferred dplyr method, because it works nicely with filter() and keeps statements readable.
+
+fish |>
+  summarise(
+    n_missing_total = sum(if_any(everything(), is.na)),
+    across(everything(), ~ any(is.na(.)), .names = "has_missing_{.col}")
+  ) |>
+  kable()
 ```
 
 -   I can connect a data wrangling pipeline into a `ggplot()`
@@ -1366,6 +1434,23 @@ ca_childcare |>
 ```{r}
 #| label: dsm-1-1
 
+# Lab 10, Q4
+# define slope and intercept parameters
+intercept = 2
+slope = 1
+
+# generate x vector
+x <- runif(n = 100, min = 0, max = 1)
+
+# generate noise `ep` vector
+ep <- rnorm(n = 100, mean = 0, sd = 1)
+
+
+# generate outcome from population model
+y = intercept + x*slope + ep
+
+# create an "observed data" dataframe with only the x and y vectors
+observed_data <- tibble(x = x, y = y)
 ```
 
 -   Example 2
@@ -1373,6 +1458,46 @@ ca_childcare |>
 ```{r}
 #| label: dsm-1-2
 
+# Lab 10, Q10
+mycifun <- function(beta0, beta1, n) {
+  sim_data <- tibble(
+    x = runif(n, min = 0, max = 1),
+    epsilon = rnorm(n, mean = 0, sd = 1),
+    y = beta0 + beta1 * x + epsilon
+  )
+  
+  model <- lm(y ~ x, data = sim_data)
+  
+  estimates_df <- broom::tidy(
+    model, 
+    conf.int = TRUE, 
+    conf.level = 0.95
+  )
+  
+  final_result <- estimates_df |>
+    filter(term == "x") |>
+    mutate(
+      true_beta1 = beta1,
+      cover = ifelse(
+        (true_beta1 >= conf.low) & (true_beta1 <= conf.high),
+        1,
+        0
+      )
+    ) |>
+    select(
+      slope_estimate = estimate,
+      lower_bound_ci = conf.low,
+      upper_bound_ci = conf.high,
+      is_covered = cover
+    )
+  
+  return(final_result)
+}
+
+set.seed(123)
+ci_dat <- map(.x = 1:1000,
+              .f = ~mycifun(beta0 = 3, beta1 = .5, n = 100)
+              )
 ```
 
 **DSSM-2: I can conduct common statistical analyses in R.**
