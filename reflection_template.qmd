@@ -1294,12 +1294,34 @@ teacher_evals_unique |>
 ```{r}
 #| label: pe-2-1
 
+# Lab 7, Q4
+rescale_01 <- function(vec) {
+  if(!is.numeric(vec)) {
+    stop('Please provide a numeric vector.')
+  }
+  if(length(vec) <= 1){
+    stop('Please provide a vector with more than one element')
+  }
+  vec_range <- range(vec, na.rm = TRUE)
+  (vec - vec_range[1]) / (vec_range[2] - vec_range[1])
+}
+
 ```
 
 -   Example 2: Function that operates on data frames
 
 ```{r}
 #| label: pe-2-2
+
+# Lab 8, Q2
+pivot_table <- function(df, col_var, row_var, fill = 0){
+  df |>
+    count({{ row_var }}, {{ col_var }}) |>
+    pivot_wider(names_from = {{ col_var }},
+                values_from = n,
+                values_fill = fill) |>
+    janitor::adorn_totals(where = c("row", "col"))
+}
 
 ```
 
@@ -1308,6 +1330,43 @@ teacher_evals_unique |>
 ```{r}
 #| label: pe-2-3
 
+# Lab 8, Q3
+labelize <- function(var){
+  enquo(var) |>
+  as_label() |>
+  str_replace_all(pattern = "_", 
+                  replacement = " ") |>
+  str_to_title()
+}
+
+# create a "pretty" scatterplot :)
+pretty_scatter <- function(df, x, y, cat){
+  
+  title_lab = englue("Scatterplot of {{x}} and {{y}} by {{cat}}") |>
+              str_replace_all(pattern = "_", 
+                              replacement = " ") |>
+              str_to_title()
+  x_lab = labelize({{x}})
+  y_lab = labelize({{y}})
+  color_lab = labelize({{cat}})
+  
+  df |>
+    ggplot(mapping = aes(x = {{x}}, 
+                         y = {{y}}, 
+                         color = {{cat}},
+                         shape = {{cat}})) +
+      geom_point() +
+      labs(
+        title = title_lab,
+        x = x_lab,
+        y = y_lab,
+        color = color_lab
+           ) +
+      guides(
+        color = guide_legend(title = color_lab),
+        shape = guide_legend(title = color_lab)
+      ) 
+  }
 ```
 
 **PE-3:I can use iteration to reduce repetition in my code.**
