@@ -551,6 +551,20 @@ teacher_evals_clean <- teacher_evals |>
 ```{r}
 #| label: r-2-3
 
+# Lab 7, Q4
+# Min-Max Normalization Function
+rescale_01 <- function(vec) {
+  if(!is.numeric(vec)) {
+    stop('Please provide a numeric vector.')
+  }
+  if(length(vec) <= 1){
+    stop('Please provide a vector with more than one element')
+  }
+  # (x - min) / (max - min)
+  vec_range <- range(vec, na.rm = TRUE)
+  (vec - vec_range[1]) / (vec_range[2] - vec_range[1])
+}
+
 ```
 
 **R-3: I can write robust programs that are resistant to changes in inputs.**
@@ -577,6 +591,20 @@ ca_childcare |>
 
 ```{r}
 #| label: r-3-function-stops
+
+# Lab 7, Q4
+# Min-Max Normalization Function
+rescale_01 <- function(vec) {
+  if(!is.numeric(vec)) {
+    stop('Please provide a numeric vector.')
+  }
+  if(length(vec) <= 1){
+    stop('Please provide a vector with more than one element')
+  }
+  # (x - min) / (max - min)
+  vec_range <- range(vec, na.rm = TRUE)
+  (vec - vec_range[1]) / (vec_range[2] - vec_range[1])
+}
 
 ```
 
@@ -1285,6 +1313,11 @@ teacher_evals_unique |>
 ```{r}
 #| label: pe-1-map-1
 
+# Lab 9, Q2
+surveys |>
+  map_chr(.f = ~ class(.x)) |>
+  enframe() |>
+  kable(col.names = c('Variable', 'Data Type'))
 ```
 
 **PE-2: I can write functions to reduce repetition in my code.**
