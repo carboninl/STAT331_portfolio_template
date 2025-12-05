@@ -6,16 +6,22 @@ editor: visual
 
 **Answer each of the following questions with *one sentence* including a brief explanation.**
 
-1. Finish the sentence with another student’s name: "If [Name of Student] doesn’t earn an A, then nobody should, because..." Explain your choice and your reasoning.
+1.  Finish the sentence with another student’s name: "If \[Name of Student\] doesn’t earn an A, then nobody should, because..." Explain your choice and your reasoning.
 
+If Otis Hunt doesn't earn an A, then nobody should, because his participation in the class was extremely helpful. There were multiple occasions when I would go to the Discord for help, and every single time Otis would be the first to reply and give me advice.
 
-2. What was the most difficult part of the class for you? List a general topic, a specific problem, a kind of work we did, etc. and explain why.
+2.  What was the most difficult part of the class for you? List a general topic, a specific problem, a kind of work we did, etc. and explain why.
 
+One of the hardest parts of the class was creating functions that take advantage of vectorized operations. My intuition/first instinct was to use some sort of loop or iteration-based approach, and I had no previous experience using vectorized operations.
 
-3. What was the easiest part of the class for you? Explain why.
+3.  What was the easiest part of the class for you? Explain why.
 
+One of the easier parts of the classes was the joins. I had previous experience from CSC 365 doing various SQL joins, so all I had to learn was the syntax that R uses (which is still very similar).
 
-4. What part of the class surprised or interested you the most? Explain why.
+4.  What part of the class surprised or interested you the most? Explain why.
 
+Something that surprised me was how solid the entire ecosystem around data visualization is. Ggplot2, kable, and gt all give so many customization options that allow you to make really professional looking visuals.
 
-5. Give one piece of advice to a student just beginning a quarter of STAT 331 that will help them be successful in learning.
+5.  Give one piece of advice to a student just beginning a quarter of STAT 331 that will help them be successful in learning.
+
+The biggest piece of advice I can give is to go to lecture and participate. I feel like the practice activities and slides are what really gave me an understanding of the content rather than the online resources.
